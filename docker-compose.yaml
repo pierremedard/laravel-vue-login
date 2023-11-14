@@ -1,0 +1,67 @@
+version: "3.8"
+services:
+  db:
+    image: mysql
+    container_name: laravel_vue_db_container
+    restart: always
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - dev
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: laravel_vue_pma_container
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+    depends_on:
+      - db
+    networks:
+      - dev
+
+  php:
+    build: 
+      context: backend
+      network: host
+      args:
+        DATABASE_URL: "mysql://root:root@db:3306/dev?serverVersion=8.1"
+    container_name: laravel_vue_be_container
+    ports:
+      - 8000:80
+    volumes:
+      - ./backend/laravel-api:/var/www
+      - ./.docker/apache:/etc/apache2/sites-enabled
+      - /var/www/vendor
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - dev
+
+  vuejs:
+    build: frontend
+    tty: true
+    restart: always
+    container_name: laravel_vue_fe_container
+    ports:
+      - 5000:5000
+    volumes:
+      - ./frontend/vue-project:/var/www
+
+networks:
+  dev:
+    driver: bridge
+
+volumes:
+  db-data:

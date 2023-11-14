@@ -1,0 +1,2 @@
+#!/bin/bash
+docker exec -it laravel_vue_fe_container vue $@
